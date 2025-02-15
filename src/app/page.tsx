@@ -1,42 +1,31 @@
-
 import { client } from "@/sanity/lib/client";
 import Hero from "./component/Hero/Hero";
 import Blogs from "./component/Blogs/Blogs";
-import HistoricalPlaces from "./Historical/Historical";
 
+async function getData() {
+  const fetchData = await client.fetch(`
+    *[_type == 'blog']{
+      title,
+      desc,
+      "imageUrl": image.asset->url,
+      _createdAt,
+      category,
+      "slug": slug.current
+    }
+  `);
 
-// interface BlogProps{
-//   title:string;
-//   desc:string;
-//   imageUrl:string;
-// }
-// async function getData(){
-//   const fetchData=await client.fetch(`*[_type == 'blog']{
-//     title,
-//       desc,
-//       "imageUrl":image.asset->url
+  return fetchData;
+}
 
-//   }[0] `);
-//    return fetchData;
-// }
-export default function Home() {
+export default async function Home() {
+  const blogs = await getData(); // Fetch once
 
   return (
-    <main className="w-full flex flex-col">
-      <Hero></Hero>
-      <Blogs
-      title={'trending blogs'}
-      category={'tourism'}>
-      </Blogs>
-      <Blogs
-      title={'historical places'}
-      category={'historical'}>
-      </Blogs>
-      <Blogs
-      title={'cultural foods'}
-      category={'food'}>
-      </Blogs>
-      
+    <main className="w-full flex flex-col items-center">
+      <Hero />
+      <Blogs title="Trending Blogs" blogs={blogs.slice(0,3)} />
+      <Blogs title="Historical Places" blogs={blogs.filter((blog:any) => blog.category.some((cat: string) => cat === "historical"))}  />
+      <Blogs title="Cultural Foods" blogs={blogs.filter((blog:any) => blog.category.some((cat: string) => cat === "food"))}  />
     </main>
   );
 }
